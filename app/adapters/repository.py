@@ -52,7 +52,9 @@ class ORMRepository(Repository):
     def __init__(self, database: databases.Database):
         self.database = database
 
-    def build_model(self, model: Callable[..., Model], columns: List[str], record: Tuple) -> Model:
+    def build_model(
+        self, model: Callable[..., Model], columns: List[str], record: Tuple
+    ) -> Model:
         return model(**{col: record[idx] for idx, col in enumerate(columns)})
 
     def extract_columns_and_values(self, entity: Model):
@@ -127,7 +129,12 @@ class UserRepository(ORMRepository):
     async def get_user_posts(self, _id: str):
         async with self.database.transaction():
             await self._get_by_id(_id)
-            query = Query.from_(posts).join(users, JoinType.inner).on(posts.author == users.id).get_sql()
+            query = (
+                Query.from_(posts)
+                .join(users, JoinType.inner)
+                .on(posts.author == users.id)
+                .get_sql()
+            )
             rows = await self.database.fetch_all(query)
             return rows
 
@@ -174,46 +181,46 @@ class PostRepository(ORMRepository):
         return self._get_by_id(_id)  # use transactions
 
     async def get_all(self) -> List[Post]:
-        columns = ['id', 'title', 'content']
+        columns = ["id", "title", "content"]
         query = posts.select(*columns).get_sql()
         rows = await self.database.fetch_all(query=query)
         return [self.build_model(Post, columns, row) for row in rows]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import asyncio
 
     database = databases.Database("sqlite:///./test.db")
     repo = UserRepository(database=database)
     posts_repo = PostRepository(database=database)
 
-
     async def get_item(_id: str):
         result = await repo.get_by_id(_id)
         print(result)
 
-
     async def add_item(user: User):
         await repo.add(entity=user)
 
-
     async def add_post(post: Post):
         await posts_repo.add(post)
-
 
     async def update_user(_id: str, new_user: User):
         result = await repo.update(_id, new_user)
         print(result)
 
-
     async def delete_user(_id: str):
         result = await repo.delete(_id)
         print(result)
 
-
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(add_item(User(id="humphrey", name="humphrey", password="humphrey")))
     loop.run_until_complete(
-        update_user(_id="humphrey", new_user=User(id="humphrey", name="new humphrey", password="new humphrey")))
+        add_item(User(id="humphrey", name="humphrey", password="humphrey"))
+    )
+    loop.run_until_complete(
+        update_user(
+            _id="humphrey",
+            new_user=User(id="humphrey", name="new humphrey", password="new humphrey"),
+        )
+    )
     loop.run_until_complete(delete_user(_id="humphrey"))
     loop.close()

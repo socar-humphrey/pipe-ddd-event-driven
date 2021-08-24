@@ -1,14 +1,21 @@
 from app.domain.models import User, Post
-from app.domains.events import UserCreationRequested, UserInfoRequested, UserDeletionRequested, PostCreated, \
-    PostViewRequested, UserPostViewRequested, AllPostViewRequested, PostUpdated, PostDeleted
+from app.domain.events import (
+    UserCreationRequested,
+    UserInfoRequested,
+    UserDeletionRequested,
+    PostCreated,
+    PostViewRequested,
+    UserPostViewRequested,
+    AllPostViewRequested,
+    PostUpdated,
+    PostDeleted,
+)
 from app.services.uow import UnitOfWork
 
 
 async def create_user(event: UserCreationRequested, uow: UnitOfWork):
     async with uow:
-        await uow.users.add(
-            User(id=event.id, name=event.name, password=event.password)
-        )
+        await uow.users.add(User(id=event.id, name=event.name, password=event.password))
         await uow.commit()
     return event.id
 
@@ -20,7 +27,9 @@ async def get_user(event: UserInfoRequested, uow: UnitOfWork):
 
 async def delete_user(event: UserDeletionRequested, uow: UnitOfWork):
     async with uow:
-        await uow.users.delete(_id=event.id)  # todo(humphrey): add password to repository
+        await uow.users.delete(
+            _id=event.id
+        )  # todo(humphrey): add password to repository
         await uow.commit()
 
 

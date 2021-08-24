@@ -1,5 +1,4 @@
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     import uvicorn as uvicorn
 
     from app.container import Container, AppConfig

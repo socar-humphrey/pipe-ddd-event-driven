@@ -8,11 +8,11 @@ class TypedTable(Table):
     __table__ = ""
 
     def __init__(
-            self,
-            name: Optional[str] = None,
-            schema: Optional[str] = None,
-            alias: Optional[str] = None,
-            query_cls: Optional[Query] = None,
+        self,
+        name: Optional[str] = None,
+        schema: Optional[str] = None,
+        alias: Optional[str] = None,
+        query_cls: Optional[Query] = None,
     ) -> None:
         if name is None:
             if self.__table__:
