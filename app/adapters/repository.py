@@ -3,7 +3,7 @@ from typing import List, Tuple, Callable
 
 import databases
 
-from pypika import Query
+from pypika import Query, JoinType
 from app.adapters.orm import users, posts
 from app.domain.models import User, Model, Post
 
@@ -126,6 +126,13 @@ class UserRepository(ORMRepository):
                 raise
             return self.build_model(User, columns, values)
 
+    async def get_user_posts(self, _id: str):
+        async with self.database.transaction():
+            await self._get_by_id(_id)
+            query = Query.from_(posts).join(users, JoinType.inner).on(posts.author == users.id).get_sql()
+            rows = await self.database.fetch_all(query)
+            return rows
+
 
 class PostRepository(ORMRepository):
     def __init__(self, database: databases.Database):
@@ -167,6 +174,12 @@ class PostRepository(ORMRepository):
         if result == -1:
             raise
         return self._get_by_id(_id)  # use transactions
+
+    async def get_all(self) -> List[Post]:
+        columns = ['id', 'title', 'content']
+        query = posts.select(*columns).get_sql()
+        rows = await self.database.fetch_all(query=query)
+        return [self.build_model(Post, columns, row) for row in rows]
 
 
 if __name__ == '__main__':
