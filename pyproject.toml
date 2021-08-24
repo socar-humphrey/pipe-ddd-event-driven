@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "pipe-crud-2"
+version = "0.1.0"
+description = ""
+authors = ["socar-humphrey <humphrey@socar.kr>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.68.0"
+dependency-injector = "^4.35.2"
+PyPika = "^0.48.8"
+databases = "^0.4.3"
+aiosqlite = "^0.17.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+black = "^21.7b0"
+httpx = "^0.19.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
