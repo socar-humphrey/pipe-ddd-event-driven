@@ -32,15 +32,7 @@ class EntityNotFoundError(RepositoryError):
 
 class Repository(ABC):
     @abstractmethod
-    def get_by_id(self, _id: str) -> ...:
-        ...
-
-    @abstractmethod
     async def get_by_id(self, _id: str) -> ...:
-        ...
-
-    @abstractmethod
-    def add(self, entity: ...) -> ...:
         ...
 
     @abstractmethod

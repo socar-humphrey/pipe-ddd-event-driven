@@ -1,8 +1,7 @@
-from datetime import datetime
 from typing import Union
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 
 
 class Model(BaseModel):
