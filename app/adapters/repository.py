@@ -97,38 +97,42 @@ class ORMRepository(Repository):
 
 class UserRepository(ORMRepository):
     async def _get_by_id(self, _id: str) -> User:
-        columns = ["id", "name", "password"]
-        query = Query.from_(users).select(*columns).where(users.id == _id)
-        result = await self.database.fetch_one(query=query.get_sql())
-        if not result:
-            raise EntityNotFoundError(message=f"User 엔티티를 찾을 수 없습니다 [id: {_id}]")
-        return self.build_model(User, columns=columns, record=result)
+        async with self.database.transaction():
+            columns = ["id", "name", "password"]
+            query = Query.from_(users).select(*columns).where(users.id == _id)
+            result = await self.database.fetch_one(query=query.get_sql())
+            if not result:
+                raise EntityNotFoundError(message=f"User 엔티티를 찾을 수 없습니다 [id: {_id}]")
+            return self.build_model(User, columns=columns, record=result)
 
     async def _add(self, entity: User) -> None:
-        columns, values = self.extract_columns_and_values(entity)
-        query = Query.into(users).columns(*columns).insert(*values)
-        result = await self.database.execute(query.get_sql())
-        if result == -1:
-            raise InsertFailureError(message=f"INSERT에 실패했습니다 [{entity}]")
+        async with self.database.transaction():
+            columns, values = self.extract_columns_and_values(entity)
+            query = Query.into(users).columns(*columns).insert(*values)
+            result = await self.database.execute(query.get_sql())
+            if result == -1:
+                raise InsertFailureError(message=f"INSERT에 실패했습니다 [{entity}]")
 
     async def _delete(self, _id: str) -> User:
-        found_user = await self._get_by_id(_id)
-        query = Query.from_(users).delete().where(users.id == found_user.id_)
-        result = await self.database.execute(query=query.get_sql())
-        if result == -1:
-            raise DeleteFailureError(message=f"DELETE에 실패했습니다 [user_id: {_id}]")
-        return found_user
+        async with self.database.transaction():
+            found_user = await self._get_by_id(_id)
+            query = Query.from_(users).delete().where(users.id == found_user.id_)
+            result = await self.database.execute(query=query.get_sql())
+            if result == -1:
+                raise DeleteFailureError(message=f"DELETE에 실패했습니다 [user_id: {_id}]")
+            return found_user
 
     async def _update(self, _id: str, new_entity: User) -> User:
-        found_user = await self._get_by_id(_id)
-        columns, values = self.extract_columns_and_values(new_entity)
-        query = users.update().where(users.id == found_user.id_)
-        for i in range(len(columns)):
-            query = query.set(columns[i], values[i])
-        result = await self.database.execute(query=query.get_sql())
-        if result == -1:
-            raise
-        return await self._get_by_id(_id)
+        async with self.database.transaction():
+            found_user = await self._get_by_id(_id)
+            columns, values = self.extract_columns_and_values(new_entity)
+            query = users.update().where(users.id == found_user.id_)
+            for i in range(len(columns)):
+                query = query.set(columns[i], values[i])
+            result = await self.database.execute(query=query.get_sql())
+            if result == -1:
+                raise
+            return self.build_model(User, columns, values)
 
 
 class PostRepository(ORMRepository):
@@ -198,11 +202,15 @@ if __name__ == '__main__':
         result = await repo.update(_id, new_user)
         print(result)
 
+
     async def delete_user(_id: str):
         result = await repo.delete(_id)
         print(result)
 
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(delete_user("humphrey"))
+    loop.run_until_complete(add_item(User(id="humphrey", name="humphrey", password="humphrey")))
+    loop.run_until_complete(
+        update_user(_id="humphrey", new_user=User(id="humphrey", name="new humphrey", password="new humphrey")))
+    loop.run_until_complete(delete_user(_id="humphrey"))
     loop.close()
