@@ -25,6 +25,7 @@ class UserDeletionRequested(Event):
 
 
 class PostCreated(Event):
+    user_id: str
     title: str
     content: str
 

@@ -26,8 +26,9 @@ async def delete_user(event: UserDeletionRequested, uow: UnitOfWork):
 
 async def create_post(event: PostCreated, uow: UnitOfWork):
     async with uow:
+        author = await uow.users.get_by_id(event.user_id)
         await uow.posts.add(
-            Post(id=event.id, title=event.title, content=event.content)
+            Post(id=event.id, title=event.title, content=event.content, author=author)
         )
         await uow.commit()
     return event.id

@@ -89,21 +89,19 @@ class ORMRepository(Repository):
 
 class UserRepository(ORMRepository):
     async def _get_by_id(self, _id: str) -> User:
-        async with self.database.transaction():
-            columns = ["id", "name", "password"]
-            query = Query.from_(users).select(*columns).where(users.id == _id)
-            result = await self.database.fetch_one(query=query.get_sql())
-            if not result:
-                raise EntityNotFoundError(message=f"User 엔티티를 찾을 수 없습니다 [id: {_id}]")
-            return self.build_model(User, columns=columns, record=result)
+        columns = ["id", "name", "password"]
+        query = Query.from_(users).select(*columns).where(users.id == _id)
+        result = await self.database.fetch_one(query=query.get_sql())
+        if not result:
+            raise EntityNotFoundError(message=f"User 엔티티를 찾을 수 없습니다 [id: {_id}]")
+        return self.build_model(User, columns=columns, record=result)
 
     async def _add(self, entity: User) -> None:
-        async with self.database.transaction():
-            columns, values = self.extract_columns_and_values(entity)
-            query = Query.into(users).columns(*columns).insert(*values)
-            result = await self.database.execute(query.get_sql())
-            if result == -1:
-                raise InsertFailureError(message=f"INSERT에 실패했습니다 [{entity}]")
+        columns, values = self.extract_columns_and_values(entity)
+        query = Query.into(users).columns(*columns).insert(*values)
+        result = await self.database.execute(query.get_sql())
+        if result == -1:
+            raise InsertFailureError(message=f"INSERT에 실패했습니다 [{entity}]")
 
     async def _delete(self, _id: str) -> User:
         async with self.database.transaction():
